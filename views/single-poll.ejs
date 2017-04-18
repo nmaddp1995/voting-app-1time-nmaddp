@@ -18,8 +18,13 @@
   </head>
   <body>
     <% include ../views/header.ejs %>
-
+      
       <script type="text/javascript">
+        $.get('/checkVote',function(data){
+          if(data=="voted")
+           alert("1 IP can vote 1 time ")
+          
+        })
         var optionForChoose=[ ['Option Name', 'Vote'],];
         var title ;
         var pollID = getQueryVariable("id");

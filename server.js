@@ -21,7 +21,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 passport.use(new Strategy({
   consumerKey: "Ik0XJT3zd2E37qI6GXm1ZrMIE",
   consumerSecret: "WDK2oUs2GSgsmEBX7gwOlxOG9H3dPHQPDMp0aPxPpd2szBovx2",
-  callbackURL: 'https://voting-app-nmaddp.herokuapp.com/login/twitter/return'
+  callbackURL: 'https://dynamic-web-nmaddp1995.c9users.io/login/twitter/return'
 },
                           function(token, tokenSecret, profile, cb) {
   // In this example, the user's Twitter profile is supplied as the user
@@ -154,7 +154,13 @@ app.get('/getPolls', function(req, res){
 
 app.get('/vote',function(req,res){
   var pollId= req.headers.referer.split('=')[1];
-  console.log(pollId);
+  var ip = req.headers['x-forwarded-for'] || 
+     req.connection.remoteAddress || 
+     req.socket.remoteAddress ||
+     req.connection.socket.remoteAddress;
+  
+  
+  
   var check ;// check optin is new or old
   if(req.query.select!=='Create new option'){
     var vote = req.query.select;
@@ -166,7 +172,24 @@ app.get('/vote',function(req,res){
   }
 
   poll.findById(pollId, function (err, data) {
-
+    
+    var size = data.listUserVote.length;
+    if(size>0){
+      console.log("here");
+      for(var i=0;i<size;i++){
+        
+        if(data.listUserVote[i].userIP==ip){
+          
+          //return res.send('<script>alert("You voted this vote before== ")</script>');
+          // return res.redirect('<script>alert("You voted this vote before== ")</script>'+req.get('referer'));
+          // res.setHeader('Content-Type', 'text/html');
+          // res.write('<script>alert("You voted this vote before== ")</script>');
+          // res.redirect('/');
+          // return ;
+          return res.redirect(req.get('referer'));
+        }
+      }
+    }
     if(check =="old"){
       for(var i=0;i<data.options.length;i++){
 
@@ -179,12 +202,50 @@ app.get('/vote',function(req,res){
         optionVote : 1 
       }
       data.options.push(option);
+      
+      
+      
     }
-
+    var userIP = {
+        userIP : ip 
+      }
+data.listUserVote.push(userIP);
     data.save(function(){});
     res.redirect(req.get('referer'));
   });
+  
 
+})
+
+
+// check user vote it before or not 
+app.get('/checkVote',function(req,res){
+  var pollId= req.headers.referer.split('=')[1];
+  var ip = req.headers['x-forwarded-for'] || 
+     req.connection.remoteAddress || 
+     req.socket.remoteAddress ||
+     req.connection.socket.remoteAddress;
+     
+    poll.findById(pollId, function (err, data) {
+    var size = data.listUserVote.length;
+    if(size>0){
+      console.log("here");
+      for(var i=0;i<size;i++){
+        
+        if(data.listUserVote[i].userIP==ip){
+          
+          //return res.send('<script>alert("You voted this vote before== ")</script>');
+          // return res.redirect('<script>alert("You voted this vote before== ")</script>'+req.get('referer'));
+          // res.setHeader('Content-Type', 'text/html');
+          // res.write('<script>alert("You voted this vote before== ")</script>');
+          // res.redirect('/');
+          // return ;
+          return res.json("voted");
+        }
+      }
+      return res.json("not yet");
+    }
+    });
 })
 
 // remove a vote

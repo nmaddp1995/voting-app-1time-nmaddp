@@ -12,6 +12,9 @@ const pollSchema = new Schema({
    options : [{
        optionName : String ,
        optionVote : Number  
+   }],
+   listUserVote : [{
+      userIP : String 
    }]
   
 });
